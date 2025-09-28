@@ -15,14 +15,17 @@ set_seed(42)
 
 #------------------------------
 
-EPOCHS = 50
-OPTUNA_TRIALS = 10
+EPOCHS = 100
+OPTUNA_TRIALS = 100
 
 MODEL_CLASS = MLPModel     #TCNModel #GRUModel  #LSTMModel #MLPModel
 
 # MODE = "block" or "house"
 MODE = "house"       # change here
-TRAINED_KEYS = ['MAC000092']   # list of block_numbers or LCLids depending on MODE
+TRAINED_KEYS = ['MAC000002', 'MAC000033', 'MAC000092', 'MAC000156', 'MAC000246', 'MAC004500', 'MAC001074', 'MAC003223']   # list of block_numbers or LCLids depending on MODE
+
+#MODE = "block"       # change here
+#TRAINED_KEYS = [0, 25, 36, 51, 61, 90, 108]   # list of block_numbers or LCLids depending on MODE
 
 cfg.OUTMODELS_DIR.mkdir(exist_ok=True)
 
