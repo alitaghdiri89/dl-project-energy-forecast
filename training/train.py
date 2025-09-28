@@ -12,8 +12,8 @@ def train_model(train_ds, val_ds, input_size, horizon, config, epochs, patience,
         print(f"Not enough data — train={len(train_ds)}, val={len(val_ds)}")
         return None, [], []
 
-    train_loader = DataLoader(train_ds, batch_size=min(config['batch_size'], len(train_ds)), shuffle=False)
-    val_loader   = DataLoader(val_ds,   batch_size=min(config['batch_size'], len(val_ds)),   shuffle=False)
+    train_loader = DataLoader(train_ds, batch_size=min(config['batch_size'], len(train_ds)), shuffle=False, drop_last=True)
+    val_loader   = DataLoader(val_ds,   batch_size=min(config['batch_size'], len(val_ds)),   shuffle=False, drop_last=True)
 
     model = model_class(
         input_size=input_size,
@@ -81,7 +81,7 @@ def train_model(train_ds, val_ds, input_size, horizon, config, epochs, patience,
     return model, train_losses, val_losses
 
 def evaluate_model(model: nn.Module, ds: Dataset):
-    loader = DataLoader(ds, batch_size=64, shuffle=False)
+    loader = DataLoader(ds, batch_size=64, shuffle=False, drop_last=True)
     preds, targets = [], []
     with torch.no_grad():
         for X, y in loader:

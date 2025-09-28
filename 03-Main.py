@@ -3,7 +3,7 @@ import optuna
 from optuna.trial import Trial
 import numpy as np
 
-from models import LSTMModel, GRUModel, TCNModel
+from models import LSTMModel, GRUModel, TCNModel, MLPModel
 from preprocessing import load_group, preprocess_df
 from training import train_model, evaluate_model
 
@@ -18,11 +18,11 @@ set_seed(42)
 EPOCHS = 50
 OPTUNA_TRIALS = 10
 
-MODEL_CLASS = LSTMModel     #TCNModel #GRUModel  #LSTMModel
+MODEL_CLASS = MLPModel     #TCNModel #GRUModel  #LSTMModel #MLPModel
 
 # MODE = "block" or "house"
 MODE = "house"       # change here
-TRAINED_KEYS = ['MAC000246']   # list of block_numbers or LCLids depending on MODE
+TRAINED_KEYS = ['MAC000092']   # list of block_numbers or LCLids depending on MODE
 
 cfg.OUTMODELS_DIR.mkdir(exist_ok=True)
 

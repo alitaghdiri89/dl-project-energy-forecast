@@ -9,14 +9,6 @@ from utils import set_seed
 
 set_seed(42)
 
-
-import torch
-from torch.utils.data import Dataset
-import numpy as np
-import pandas as pd
-from typing import List
-
-
 class SlidingWindowDataset(Dataset):
     """
     Builds sliding windows for time series prediction.
