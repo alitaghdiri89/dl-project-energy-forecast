@@ -19,14 +19,14 @@ EPOCHS = 100
 OPTUNA_TRIALS = 100
 
 # MODEL_CLASS can be one of these values: TCNModel or GRUModel or LSTMModel or MLPModel
-MODEL_CLASS = MLPModel     
+MODEL_CLASS = LSTMModel     
 
 # MODE = "block" or "house"
-MODE = "house"
-TRAINED_KEYS = ['MAC000002', 'MAC000033', 'MAC000092', 'MAC000156', 'MAC000246', 'MAC004500', 'MAC001074', 'MAC003223']   # list of block_numbers or LCLids depending on MODE
+#MODE = "house"
+#TRAINED_KEYS = ['MAC000002', 'MAC000033', 'MAC000092', 'MAC000156', 'MAC000246', 'MAC004500', 'MAC001074', 'MAC003223']   # list of block_numbers or LCLids depending on MODE
 
-#MODE = "block"
-#TRAINED_KEYS = [0, 25, 36, 51, 61, 90, 108]   # list of block_numbers or LCLids depending on MODE
+MODE = "block"
+TRAINED_KEYS = [0, 25, 36, 51, 61, 90, 108]   # list of block_numbers or LCLids depending on MODE
 
 cfg.OUTMODELS_DIR.mkdir(exist_ok=True)
 
