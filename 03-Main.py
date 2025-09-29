@@ -131,7 +131,12 @@ if __name__ == "__main__":
 
             # Retrieve the best trial and associated objects
             best_trial = study.best_trial
-            model = best_trial.user_attrs["best_model"]
+            model = best_trial.user_attrs.get("best_model", None)
+
+            if model is None:
+                print(f"No valid model found for Horizon {horizon}. Skipping...")
+                continue  # Skip this setup if no model was found
+
             tscaler = best_trial.user_attrs["tgt_scaler"]
             train_loss = best_trial.user_attrs["train_loss"]
             val_loss = best_trial.user_attrs["val_loss"]
