@@ -18,14 +18,14 @@ set_seed(42)
 EPOCHS = 100
 OPTUNA_TRIALS = 100
 
-# MODEL_CLASS = TCNModel or GRUModel or LSTMModel or MLPModel
+# MODEL_CLASS can be one of these values: TCNModel or GRUModel or LSTMModel or MLPModel
 MODEL_CLASS = MLPModel     
 
 # MODE = "block" or "house"
-MODE = "house"       # change here
+MODE = "house"
 TRAINED_KEYS = ['MAC000002', 'MAC000033', 'MAC000092', 'MAC000156', 'MAC000246', 'MAC004500', 'MAC001074', 'MAC003223']   # list of block_numbers or LCLids depending on MODE
 
-#MODE = "block"       # change here
+#MODE = "block"
 #TRAINED_KEYS = [0, 25, 36, 51, 61, 90, 108]   # list of block_numbers or LCLids depending on MODE
 
 cfg.OUTMODELS_DIR.mkdir(exist_ok=True)
@@ -45,10 +45,12 @@ def save_model(obj, mode: str, key):
     torch.save(obj, model_path)
     print(f"Saved {len(obj)} horizons for {mode} {key} → {model_path}")
 
+# Factory function that returns an Optuna objective function tailored to a specific dataset and configuration
 def objective_factory(df_group, window_size, horizon, val_ratio):
+    # The actual objective function used by Optuna during hyperparameter optimization
     def objective(trial: Trial):
         
-        # ---- collect trial params into one dict ----
+        # Suggest general hyperparameters for optimization
         general_config = {
             "lr":           trial.suggest_float("lr", 1e-5, 1e-2, log=True),
             "weight_decay": trial.suggest_float("weight_decay", 1e-6, 1e-2, log=True),
@@ -57,10 +59,12 @@ def objective_factory(df_group, window_size, horizon, val_ratio):
             "scaler":       trial.suggest_categorical("scaler", ["Std", "MinMax", "None"]),
         }
 
+        # Suggest model-specific hyperparameters using the MODEL_CLASS's method
         model_config = MODEL_CLASS.suggest_config(trial)
 
         config = {**model_config, **general_config}
 
+        # ---- data preprocessing ----
         train_ds, val_ds, tscaler, new_features = preprocess_df(
             df_group=df_group,
             target=cfg.TARGET,
@@ -72,6 +76,7 @@ def objective_factory(df_group, window_size, horizon, val_ratio):
             scaler_choice=config["scaler"],
         )
 
+        # If either training or validation dataset is empty, return a high RMSE to penalize this configuration
         if len(train_ds) == 0 or len(val_ds) == 0:
             return float("inf")
 
@@ -89,6 +94,7 @@ def objective_factory(df_group, window_size, horizon, val_ratio):
         if model is None:
             return float("inf")
 
+        # ---- model evaluation ----
         preds, targets = evaluate_model(model, val_ds)
 
         mse = torch.mean((preds - targets) ** 2).item()
@@ -118,16 +124,19 @@ if __name__ == "__main__":
         for window_size, horizon, val_ratio in cfg.SETUPS:
             print(f"→ Window Size: {window_size}, Horizon: {horizon}, Val Ratio: {val_ratio}")
 
+            # Optuna study for hyperparameter optimization
             study = optuna.create_study(direction="minimize")
             study.optimize(objective_factory(df_group, window_size, horizon, val_ratio),
                            n_trials=OPTUNA_TRIALS, n_jobs=1)
 
+            # Retrieve the best trial and associated objects
             best_trial = study.best_trial
             model = best_trial.user_attrs["best_model"]
             tscaler = best_trial.user_attrs["tgt_scaler"]
             train_loss = best_trial.user_attrs["train_loss"]
             val_loss = best_trial.user_attrs["val_loss"]
 
+            # Store the best model and related information for this horizon
             group_models[f"horizon_{horizon}"] = {
                 "model_state_dict": model.state_dict(),
                 "scalers": tscaler,

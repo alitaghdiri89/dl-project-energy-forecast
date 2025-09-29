@@ -62,10 +62,12 @@ class SlidingWindowDataset(Dataset):
         if preds.ndim > 1:
             preds = preds.reshape(-1)
 
+        # validate preds length
         if len(preds) < shift:
             raise ValueError(f"Need at least {shift} predictions, got {len(preds)}")
 
-        preds = preds[:shift]  # only use first `shift` predictions
+        # only use first `shift` predictions
+        preds = preds[:shift]
 
         # extend buffer
         self.target_buffer.extend(preds.tolist())
@@ -77,12 +79,14 @@ class SlidingWindowDataset(Dataset):
             if new_idx >= len(self.df_orig):
                 break  # stop if beyond true_y range
 
+            # get new row from original df
             row = self.df_orig.iloc[new_idx].copy()
             row[self.target] = self.target_buffer[new_idx]
 
             # update lag features from buffer
             for lag in self.lags:
                 if new_idx - lag >= 0:
+                    # lag feature from buffer to avoid data leakage
                     row[f"lag_{lag}"] = self.target_buffer[new_idx - lag]
                 else:
                     row[f"lag_{lag}"] = np.nan
@@ -116,18 +120,18 @@ def preprocess_df(
     # Sort and reset index
     dfb = df_group.sort_values("day").reset_index(drop=True)
 
-    # --- Inline build_threshold logic ---
+    # Determine split threshold based on val_ratio
     n = len(dfb)
     split_row = int(n * (1 - val_ratio))
     split_row = min(max(split_row, 0), n - 1)
     threshold = dfb.sort_values("day")["day"].iloc[split_row]
 
-    # Fit scalers + get final feature set
+    # Fit scalers on training data only
     tscaler = fit_scalers_on_training_data(
         dfb, target, threshold, scaler_choice
     )
 
-    # Apply transformations
+    # Apply transformations (scalers, lags, time features)
     dfb_scaled, final_features = apply_transformations(
         dfb, target, lags, features, tscaler
     )
@@ -203,12 +207,14 @@ def apply_transformations(
     # --- Add time-based features directly ---
     new_features = all_features.copy()
 
+    # Day of Year (DOY) as sine and cosine
     if "DOY" in all_features:
         dfb["DOY_sin"] = np.sin(2 * np.pi * dfb["DOY"] / 365)
         dfb["DOY_cos"] = np.cos(2 * np.pi * dfb["DOY"] / 365)
         new_features.remove("DOY")
         new_features.extend(["DOY_sin", "DOY_cos"])
 
+    # Day of Week (DOW) as one-hot encoding
     if "day_of_week" in all_features:
         dummies = pd.get_dummies(dfb["day_of_week"], prefix="dow", dtype=np.uint8)
         dfb = pd.concat([dfb, dummies], axis=1)
