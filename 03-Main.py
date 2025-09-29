@@ -18,7 +18,8 @@ set_seed(42)
 EPOCHS = 100
 OPTUNA_TRIALS = 100
 
-MODEL_CLASS = MLPModel     #TCNModel #GRUModel  #LSTMModel #MLPModel
+# MODEL_CLASS = TCNModel or GRUModel or LSTMModel or MLPModel
+MODEL_CLASS = MLPModel     
 
 # MODE = "block" or "house"
 MODE = "house"       # change here
